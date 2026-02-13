@@ -38,8 +38,6 @@ function parseArgs(argv) {
     template: "simple", // simple | madr
     strategy: "auto", // auto | number | slug
     deciders: "",
-    consulted: "",
-    informed: "",
     technicalStory: "",
     chosenOption: "",
     updateIndex: false,
@@ -62,8 +60,6 @@ function parseArgs(argv) {
     else if (a === "--template") out.template = next();
     else if (a === "--strategy") out.strategy = next();
     else if (a === "--deciders") out.deciders = next();
-    else if (a === "--consulted") out.consulted = next();
-    else if (a === "--informed") out.informed = next();
     else if (a === "--technical-story") out.technicalStory = next();
     else if (a === "--chosen-option") out.chosenOption = next();
     else if (a === "--update-index") out.updateIndex = true;
@@ -82,8 +78,6 @@ function parseArgs(argv) {
           "  --template simple|madr Template (default: simple)",
           "  --strategy auto|number|slug  Filename strategy (default: auto)",
           "  --deciders \"a,b\"      Deciders list",
-          "  --consulted \"a,b\"     Consulted experts (RACI)",
-          "  --informed \"a,b\"      Informed stakeholders (RACI)",
           "  --technical-story <x>  Issue/ticket/PR link or short ref",
           "  --chosen-option <x>    MADR template: chosen option label",
           "  --update-index         Update adr/README.md (or existing index)",
@@ -195,19 +189,6 @@ function renderTemplate(raw, vars) {
     /^(decision-makers:\s*)["']?\{[^}]*\}["']?\s*$/m,
     `$1${vars.deciders || ""}`
   );
-
-  // consulted / informed: replace if a value was provided, otherwise remove the
-  // entire line so we don't leak placeholder text like "{list everyone...}"
-  if (vars.consulted) {
-    out = out.replace(/^(consulted:\s*)["']?\{[^}]*\}["']?\s*$/m, `$1${vars.consulted}`);
-  } else {
-    out = out.replace(/^consulted:\s*["']?\{[^}]*\}["']?\s*\n/m, "");
-  }
-  if (vars.informed) {
-    out = out.replace(/^(informed:\s*)["']?\{[^}]*\}["']?\s*$/m, `$1${vars.informed}`);
-  } else {
-    out = out.replace(/^informed:\s*["']?\{[^}]*\}["']?\s*\n/m, "");
-  }
 
   // Replace MADR-style heading placeholder
   out = out.replace(
@@ -349,25 +330,12 @@ function main() {
     .filter(Boolean)
     .join(", ");
 
-  const consulted = String(args.consulted || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .join(", ");
-  const informed = String(args.informed || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .join(", ");
-
   const raw = loadTemplate(args.template);
   const rendered = renderTemplate(raw, {
     title,
     status: String(args.status).trim(),
     date: today,
     deciders,
-    consulted,
-    informed,
     technicalStory: String(args.technicalStory || "").trim(),
     chosenOption: String(args.chosenOption || "").trim(),
   });

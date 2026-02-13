@@ -1,44 +1,32 @@
-# {TITLE}
+---
+status: "{proposed | accepted | rejected | deprecated | superseded by [ADR-NNNN](NNNN-title.md)}"
+date: {YYYY-MM-DD}
+decision-makers: "{list everyone who owns the decision}"
+---
 
-- Status: {STATUS}
-- Date: {DATE}
-- Deciders: {DECIDERS}
-- Technical Story: {TECHNICAL_STORY}
+# {short title, representative of solved problem and found solution}
 
-## Context
+## Context and Problem Statement
 
-What is the issue or constraint that makes this decision necessary right now?
-
-Include:
-
-- Key requirements and constraints (time, cost, reliability, security, devex, etc.)
-- What broke or what will break if we do nothing
-- Any relevant prior decisions
+{Why does this decision need to happen now? What constraints exist? Include enough background that someone (or an agent) reading this for the first time can understand without follow-up questions.}
 
 ## Decision
 
-What are we choosing to do?
-
-Be specific. Include the scope and any non-goals.
+{What are we choosing to do? Be specific — include scope and non-goals.}
 
 ## Consequences
 
-What happens because we made this choice?
+* Good, because {positive consequence}
+* Bad, because {negative consequence}
+* …
 
-Include:
+<!-- Optional — remove if not needed -->
+## Alternatives Considered
 
-- Positive outcomes
-- Negative outcomes / risks
-- Follow-ups (tasks, migrations, debt, docs)
+* {Alternative 1}: {Why it was rejected, in one or two sentences.}
+* {Alternative 2}: {Why it was rejected.}
 
-## Alternatives Considered (Optional)
+<!-- Optional — remove if not needed -->
+## More Information
 
-- Option A:
-- Option B:
-
-## Links (Optional)
-
-- Related ADRs:
-- Related PRs/issues:
-- Related docs:
-
+{Related ADRs, PRs, issues, docs, or conditions that would trigger revisiting this decision.}

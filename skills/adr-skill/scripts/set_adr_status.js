@@ -55,6 +55,42 @@ function parseArgs(argv) {
   return { file, status: String(status).trim(), json };
 }
 
+function setYamlFrontMatterStatus(lines, newStatus) {
+  // YAML front matter: starts with '---', ends with next '---'
+  if (lines.length < 2 || lines[0].trim() !== "---") return { lines, changed: false };
+
+  let changed = false;
+  const out = [];
+  let inFrontMatter = true;
+  let passedOpening = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (i === 0 && line.trim() === "---") {
+      passedOpening = true;
+      out.push(line);
+      continue;
+    }
+
+    if (passedOpening && inFrontMatter && line.trim() === "---") {
+      inFrontMatter = false;
+      out.push(line);
+      continue;
+    }
+
+    if (passedOpening && inFrontMatter && /^status\s*:/.test(line)) {
+      out.push(`status: ${newStatus}`);
+      changed = true;
+      continue;
+    }
+
+    out.push(line);
+  }
+
+  return { lines: out, changed };
+}
+
 function setBulletStatus(lines, newStatus) {
   let changed = false;
   const out = lines.map((line) => {
@@ -106,11 +142,12 @@ function main() {
   const hadTrailingNewline = content.endsWith("\n");
   const lines = content.replace(/\r\n/g, "\n").split("\n");
 
-  let r = setBulletStatus(lines, args.status);
+  let r = setYamlFrontMatterStatus(lines, args.status);
+  if (!r.changed) r = setBulletStatus(lines, args.status);
   if (!r.changed) r = setSectionStatus(lines, args.status);
   if (!r.changed) {
     die(
-      "Could not find a status to update. Expected '- Status:'/'* Status:' or a '## Status' section."
+      "Could not find a status to update. Expected YAML front matter 'status:', '- Status:'/'* Status:', or a '## Status' section."
     );
   }
 

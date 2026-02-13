@@ -1,132 +1,164 @@
 ---
 name: adr-skill
-description: Create and maintain Architecture Decision Records (ADRs) in git repos. Use when you need to propose, write, update, accept/reject, deprecate, or supersede an ADR; bootstrap an adr folder and index; or enforce ADR conventions (status, dates, links, and filenames) for markdown decision logs.
+description: Create and maintain Architecture Decision Records (ADRs) optimized for agentic coding workflows. Use when you need to propose, write, update, accept/reject, deprecate, or supersede an ADR; bootstrap an adr folder and index; or enforce ADR conventions. This skill uses Socratic questioning to capture intent before drafting, and validates output against an agent-readiness checklist.
 ---
 
 # ADR Skill
 
-## Overview
+## Philosophy
 
-Create high-signal ADRs that capture the "why" behind architecture choices, and keep the ADR log tidy as the system evolves.
+ADRs created with this skill are **agent-first**: they are written so that a coding agent can read one and implement the decision without further clarification. Humans review and approve, but the primary consumer is an agent working from the ADR.
 
-## Workflow Decision Tree
+This means:
+- Constraints must be explicit and measurable, not vibes
+- Decisions must be specific enough to act on ("use PostgreSQL 16 with pgvector" not "use a database")
+- Consequences must map to concrete follow-up tasks
+- Non-goals must be stated to prevent scope creep
+- The ADR must be self-contained — no tribal knowledge assumptions
 
-1. Determine the request type:
-- **Create a new ADR**: Follow "New ADR" below.
-- **Update an existing ADR** (status change, add learnings, supersede): Follow "Update ADR" below.
-- **Fix or create an ADR index/log**: Follow "Index" below.
-- **Adopt ADRs in a repo that has none**: Follow "Bootstrap" below.
+## Three-Phase Workflow
 
-2. If the repo already has an ADR convention, follow it:
-- Directory: `adr/`, `docs/adr/`, `docs/decisions/`, etc.
-- Filenames: `choose-database.md` or `0001-choose-database.md`, etc.
-- Template: simple vs option-heavy.
+Every ADR goes through three phases. Do not skip Phase 1.
 
-If the repo has no convention yet, default to:
-- Directory: `adr/`
-- Filenames: numbered, then slug (e.g., `0001-choose-database.md`)
-- Template: `assets/templates/adr-simple.md`
+### Phase 1: Capture Intent (Socratic)
 
-## New ADR
+Before writing anything, interview the human to understand the decision space. Ask questions **one at a time**, building on previous answers. Do not dump a list of questions.
 
-1. Choose the ADR directory.
-- If one exists, use it.
-- If none exists, create `adr/` (or the user's preferred directory).
+**Core questions** (ask in roughly this order, skip what's already clear from context):
 
-2. Choose a filename strategy.
-- If existing ADRs use numeric prefixes (e.g., `0001-...`), continue that.
-- Otherwise use slug-only filenames (e.g., `choose-database.md`).
+1. **What are you deciding?** — Get a short, specific title. Push for a verb phrase ("Choose X", "Adopt Y", "Replace Z with W").
+2. **Why now?** — What broke, what's changing, or what will break if you do nothing? This is the trigger.
+3. **What constraints exist?** — Tech stack, timeline, budget, team size, existing code, compliance. Be concrete.
+4. **What does success look like?** — Measurable outcomes. Push past "it works" to specifics (latency, throughput, DX, maintenance burden).
+5. **What options have you considered?** — At least two. For each: what's the core tradeoff? If they only have one option, help them articulate why alternatives were rejected.
+6. **What's your current lean?** — Capture gut intuition early. Often reveals unstated priorities.
+7. **Who needs to know or approve?** — Decision-makers, consulted experts, informed stakeholders.
+8. **What would you tell a new engineer (or agent) implementing this?** — This surfaces the practical context that often gets left out.
 
-3. Choose a template.
-- Use `assets/templates/adr-simple.md` for most decisions.
-- Use `assets/templates/adr-madr.md` when you need to document options, pros/cons, and drivers.
+**Adaptive follow-ups**: Based on answers, probe deeper where the decision is fuzzy. Common follow-ups:
+- "What's the worst-case outcome if this decision is wrong?"
+- "What would make you revisit this in 6 months?"
+- "Is there anything you're explicitly choosing NOT to do?"
+- "What prior art or existing patterns in the codebase does this relate to?"
 
-4. Gather inputs (minimum viable ADR).
-- Title: short, actionable, ideally verb phrase.
-- Status: usually `proposed` initially.
-- Context: the constraint, requirement, and why this matters now.
-- Decision: the actual choice, not the story.
-- Consequences: what gets easier/harder, follow-ups, migration costs, risks.
+**When to stop**: You have enough when you can mentally draft every section of the ADR without making things up. If you're guessing at any section, ask another question.
 
-5. Generate the file.
-- Preferred: run `scripts/new_adr.js` (it handles directory, naming strategy, and optional index updates).
-- If you can't run scripts, copy a template from `assets/templates/` and fill it manually.
+### Phase 2: Draft the ADR
 
-### Script: new_adr.js
+1. **Choose the ADR directory.**
+   - If one exists (`adr/`, `docs/adr/`, `docs/decisions/`, etc.), use it.
+   - If none exists, create `docs/decisions/` (MADR default) or `adr/` (simpler repos).
 
-From the target repo root:
+2. **Choose a filename strategy.**
+   - If existing ADRs use numeric prefixes (`0001-...`), continue that.
+   - Otherwise use slug-only filenames (`choose-database.md`).
 
-```bash
-node /path/to/adr-skill/scripts/new_adr.js --title "Choose database" --status proposed
-```
+3. **Choose a template.**
+   - Use `assets/templates/adr-simple.md` for straightforward decisions (one clear winner, minimal tradeoffs).
+   - Use `assets/templates/adr-madr.md` when you need to document multiple options with structured pros/cons/drivers.
+   - See `references/template-variants.md` for guidance.
 
-If you want MADR-style:
+4. **Fill every section from Phase 1 answers.** Do not leave placeholder text. Every section should contain real content or be removed (optional sections only).
 
-```bash
-node /path/to/adr-skill/scripts/new_adr.js --title "Choose database" --template madr --status proposed
-```
+5. **Generate the file.**
+   - Preferred: run `scripts/new_adr.js` (handles directory, naming, and optional index updates).
+   - If you can't run scripts, copy a template from `assets/templates/` and fill it manually.
 
-Notes:
-- The script tries to auto-detect the ADR directory and filename strategy.
-- Use `--dir` and `--strategy` to override.
-- Use `--json` to emit machine-readable output for tooling.
+### Phase 3: Review Against Checklist
 
-## Update ADR
+After drafting, review the ADR against the agent-readiness checklist in `references/review-checklist.md`. Present findings to the human and iterate.
+
+Key questions the review answers:
+- Could an agent implement this decision from the ADR alone?
+- Are there ambiguities that would cause an agent to guess or ask for clarification?
+- Are consequences actionable (specific tasks, not vague aspirations)?
+- Is the scope bounded (what's in AND what's out)?
+
+Do not finalize until the ADR passes the checklist or the human explicitly accepts the gaps.
+
+## Other Operations
+
+### Update an Existing ADR
 
 1. Identify the intent:
-- **Accept / reject**: change status, and add any final context that made the decision clear.
-- **Deprecate**: status becomes `deprecated` and explain replacement path.
-- **Supersede**: create a new ADR and link both ways (old points to new; new references old).
-- **Add learnings**: append an "After-action" note with a date stamp rather than rewriting history.
+   - **Accept / reject**: change status, add any final context.
+   - **Deprecate**: status → `deprecated`, explain replacement path.
+   - **Supersede**: create a new ADR, link both ways (old → new, new → old).
+   - **Add learnings**: append to `## More Information` with a date stamp. Do not rewrite history.
 
-2. Keep it navigable:
-- Link to PRs/issues, tickets, docs.
-- Prefer small edits that explain why reality diverged from the original assumptions.
+2. Use `scripts/set_adr_status.js` for status changes (supports both YAML front matter and inline status).
 
-## Index
+### Index
 
-If the repo has an ADR index/log file (often `adr/README.md` or `adr/index.md`), keep it updated.
+If the repo has an ADR index/log file (often `README.md` or `index.md` in the ADR dir), keep it updated.
 
 Preferred: let `scripts/new_adr.js --update-index` do it. Otherwise:
 - Add a bullet entry for the new ADR.
-- Keep ordering consistent (numeric order if numbered; alphabetical or date order if slugs).
+- Keep ordering consistent (numeric if numbered; date or alpha if slugs).
 
-## Bootstrap
+### Bootstrap
 
 When introducing ADRs to a repo that has none:
-
-Preferred: run `scripts/bootstrap_adr.js`, which:
-
-1. Creates the directory `adr/`.
-2. Creates an index file `adr/README.md`.
-3. Creates the first ADR (meta decision): "Adopt architecture decision records".
-
-Example:
 
 ```bash
 node /path/to/adr-skill/scripts/bootstrap_adr.js
 ```
 
-If you want machine-readable output:
+This creates the directory, an index file, and the first ADR ("Adopt architecture decision records"). Use `--json` for machine-readable output. Use `--dir` to override the directory name.
 
-```bash
-node /path/to/adr-skill/scripts/bootstrap_adr.js --json
+### Categories (Large Projects)
+
+For repos with many ADRs, organize by subdirectory:
+
 ```
+docs/decisions/
+  backend/
+    0001-use-postgres.md
+  frontend/
+    0001-use-react.md
+  infrastructure/
+    0001-use-terraform.md
+```
+
+Numbers are local to each category. Choose a categorization scheme early (by layer, by domain, by team) and document it in the index.
 
 ## Resources
 
-Read these when you need more detail or want to align with common ADR conventions:
-
 ### scripts/
-- `scripts/new_adr.js`: create a new ADR file from a template, using repo conventions.
-- `scripts/set_adr_status.js`: update an ADR status in-place (supports the included templates). Use `--json` for machine output.
-- `scripts/bootstrap_adr.js`: create `adr/README.md` plus the initial "Adopt ADRs" decision.
+- `scripts/new_adr.js` — create a new ADR file from a template, using repo conventions.
+- `scripts/set_adr_status.js` — update an ADR status in-place (YAML front matter or inline). Use `--json` for machine output.
+- `scripts/bootstrap_adr.js` — create ADR dir, `README.md`, and initial "Adopt ADRs" decision.
 
 ### references/
-- `references/adr-conventions.md`: directory + filename conventions and lifecycle guidance.
-- `references/template-variants.md`: when to use simple vs MADR-style templates.
+- `references/review-checklist.md` — agent-readiness checklist for Phase 3 review.
+- `references/adr-conventions.md` — directory, filename, status, and lifecycle conventions.
+- `references/template-variants.md` — when to use simple vs MADR-style templates.
+- `references/examples.md` — filled-out short and long ADR examples.
 
 ### assets/
-- `assets/templates/adr-simple.md`: a small template for most ADRs.
-- `assets/templates/adr-madr.md`: a bigger template for decisions with real options/tradeoffs.
-- `assets/templates/adr-readme.md`: default ADR index scaffold used by `scripts/bootstrap_adr.js`.
+- `assets/templates/adr-simple.md` — lean template for straightforward decisions.
+- `assets/templates/adr-madr.md` — MADR 4.0 template for decisions with multiple options and structured tradeoffs.
+- `assets/templates/adr-readme.md` — default ADR index scaffold used by `scripts/bootstrap_adr.js`.
+
+### Script Usage
+
+From the target repo root:
+
+```bash
+# Simple ADR
+node /path/to/adr-skill/scripts/new_adr.js --title "Choose database" --status proposed
+
+# MADR-style with options
+node /path/to/adr-skill/scripts/new_adr.js --title "Choose database" --template madr --status proposed
+
+# With index update
+node /path/to/adr-skill/scripts/new_adr.js --title "Choose database" --status proposed --update-index
+
+# Bootstrap a new repo
+node /path/to/adr-skill/scripts/bootstrap_adr.js --dir docs/decisions
+```
+
+Notes:
+- Scripts auto-detect ADR directory and filename strategy.
+- Use `--dir` and `--strategy` to override.
+- Use `--json` to emit machine-readable output.

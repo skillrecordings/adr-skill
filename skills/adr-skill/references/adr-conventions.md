@@ -1,62 +1,93 @@
 # ADR Conventions (Reference)
 
-This skill's default conventions are based on common ADR practices and the `architecture-decision-record` reference repo by Joel Parker Henderson.
-
 ## Directory
 
 If the repo already has an ADR directory, keep it.
 
-If the repo has no ADR directory, a pragmatic default is:
+If the repo has no ADR directory, choose based on project size:
 
-- `adr/`
+- **`docs/decisions/`** — MADR default, recommended for projects with existing `docs/` structure.
+- **`adr/`** — simpler alternative for smaller repos.
 
-Reference: `architecture-decision-record` README.md, "How to start using ADRs with git" suggests creating an `adr` directory.
+Detection order (used by scripts): `docs/decisions/`, `adr/`, `docs/adr/`, `docs/adrs/`, `decisions/`.
 
 ## Filename Conventions
 
-Prefer a present-tense imperative verb phrase, lowercase, with dashes:
+Pattern: `NNNN-title-with-dashes.md`
 
-- `choose-database.md`
-- `format-timestamps.md`
-- `manage-passwords.md`
+- `NNNN` is a zero-padded sequential number (assume max 9,999 ADRs per directory).
+- Title uses lowercase, dashes, present-tense imperative verb phrase.
+- Examples: `0001-choose-database.md`, `0002-adopt-adrs.md`
 
-Reference: `architecture-decision-record` README.md, "File name conventions for ADRs".
-
-If a repo already uses numeric prefixes, stick with that convention:
-
-- `0001-choose-database.md`
-- `0002-format-timestamps.md`
+If a repo already uses slug-only filenames (no numeric prefix), follow that convention.
 
 ## Minimal Sections
 
-At minimum, every ADR should clearly include:
+At minimum, every ADR must clearly include:
 
-1. Context: why the decision exists now, what constraints/drivers apply.
-2. Decision: what is chosen.
-3. Consequences: what becomes easier/harder, risks, costs, follow-ups.
+1. **Context**: why the decision exists now, what constraints/drivers apply.
+2. **Decision**: what is chosen.
+3. **Consequences**: what becomes easier/harder, risks, costs, follow-ups.
 
-Reference: `architecture-decision-record` templates and guidance emphasize context + decision + consequences as the core.
+For agent-first ADRs, also ensure:
+- Constraints are explicit and measurable
+- Non-goals are stated
+- Follow-up tasks are identified
 
 ## Status Values
 
-Common statuses (pick what matches the repo's existing taxonomy):
+Track status in YAML front matter:
 
-- `proposed`
-- `accepted`
-- `rejected`
-- `deprecated`
-- `superseded`
+```yaml
+---
+status: proposed
+date: 2025-06-15
+decision-makers: Alice, Bob
+---
+```
 
-If superseded, include a link to the newer ADR.
+Common statuses:
+
+| Status | Meaning |
+|--------|---------|
+| `proposed` | Under discussion, not yet decided |
+| `accepted` | Decision is active and should be followed |
+| `rejected` | Considered but explicitly not adopted |
+| `deprecated` | Was accepted but no longer applies — explain replacement path |
+| `superseded by [ADR-NNNN](link)` | Replaced by a newer ADR — always link both ways |
+
+## YAML Front Matter Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `status` | Yes | Current lifecycle state |
+| `date` | Yes | Date of last status change (YYYY-MM-DD) |
+| `decision-makers` | Yes | People who own the decision |
+| `consulted` | No | Subject-matter experts consulted (two-way communication) |
+| `informed` | No | Stakeholders kept up-to-date (one-way communication) |
+
+The `consulted` and `informed` fields follow the RACI model and are useful for audit trails in larger teams.
 
 ## Mutability
 
-Idealized ADR guidance tends to say "don't rewrite history"; practical teams often treat ADRs as living documents.
+- Prefer appending new information with a date stamp over rewriting existing content.
+- If a decision is replaced, create a new ADR and explicitly supersede the old one.
+- Status changes and after-action notes are fine to edit in-place.
 
-If editing an existing ADR:
+## Categories (Large Projects)
 
-- Prefer appending new information with a date stamp.
-- If the decision is replaced, create a new ADR and explicitly supersede the old one.
+For repos accumulating many ADRs, use subdirectories:
 
-Reference: `architecture-decision-record` README.md, "Suggestions for writing good ADRs" and "Teamwork advice for ADRs" discuss immutability vs living documents.
+```
+docs/decisions/
+  backend/
+    0001-use-postgres.md
+  frontend/
+    0001-use-react.md
+  infrastructure/
+    0001-use-terraform.md
+```
 
+Numbers are local to each category. Choose a categorization scheme early (by architectural layer, by domain, by team) and document it in the index.
+
+Alternative: use tags or a flat structure with a searchable index. Subdirectories are simpler and work with all tools.

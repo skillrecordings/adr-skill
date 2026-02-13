@@ -102,10 +102,10 @@ function parseArgs(argv) {
 
 function detectAdrDir(repoRoot) {
   const candidates = [
+    path.join(repoRoot, "docs", "decisions"),
     path.join(repoRoot, "adr"),
     path.join(repoRoot, "docs", "adr"),
     path.join(repoRoot, "docs", "adrs"),
-    path.join(repoRoot, "docs", "decisions"),
     path.join(repoRoot, "decisions"),
   ];
   for (const p of candidates) {
@@ -172,13 +172,40 @@ function loadTemplate(templateName) {
 }
 
 function renderTemplate(raw, vars) {
-  return raw
+  // Handle YAML front matter placeholders (quoted and unquoted)
+  let out = raw;
+
+  // YAML front matter fields — replace the whole placeholder pattern
+  // e.g. status: "{proposed | accepted | ...}" → status: proposed
+  out = out.replace(
+    /^(status:\s*)["']?\{[^}]*\}["']?\s*$/m,
+    `$1${vars.status}`
+  );
+  out = out.replace(
+    /^(date:\s*)\{[^}]*\}\s*$/m,
+    `$1${vars.date}`
+  );
+  out = out.replace(
+    /^(decision-makers:\s*)["']?\{[^}]*\}["']?\s*$/m,
+    `$1${vars.deciders || ""}`
+  );
+
+  // Replace MADR-style heading placeholder
+  out = out.replace(
+    /^(#\s+)\{short title[^}]*\}\s*$/m,
+    `$1${vars.title}`
+  );
+
+  // Inline placeholders (title in heading, etc.)
+  out = out
     .replaceAll("{TITLE}", vars.title)
     .replaceAll("{STATUS}", vars.status)
     .replaceAll("{DATE}", vars.date)
     .replaceAll("{DECIDERS}", vars.deciders)
     .replaceAll("{TECHNICAL_STORY}", vars.technicalStory)
     .replaceAll("{CHOSEN_OPTION}", vars.chosenOption);
+
+  return out;
 }
 
 function chooseIndexFile(adrDir) {

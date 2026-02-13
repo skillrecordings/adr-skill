@@ -1,68 +1,71 @@
-# {TITLE}
+---
+status: "{proposed | accepted | rejected | deprecated | superseded by [ADR-NNNN](NNNN-title.md)}"
+date: {YYYY-MM-DD}
+decision-makers: "{list everyone who owns the decision}"
+consulted: "{list everyone whose expertise was sought — two-way communication}"
+informed: "{list everyone kept up-to-date — one-way communication}"
+---
 
-- Status: {STATUS}
-- Deciders: {DECIDERS}
-- Date: {DATE}
-- Technical Story: {TECHNICAL_STORY}
+# {short title, representative of solved problem and found solution}
 
 ## Context and Problem Statement
 
-Describe the context and the problem you're solving.
+{Describe the context and problem statement. Frame it as a question when possible. Link to relevant issues, tickets, or prior ADRs. Include enough background that someone (or an agent) encountering this for the first time can understand why this decision exists without asking follow-up questions.}
 
-A useful framing:
+<!-- Optional — remove if not needed -->
+## Decision Drivers
 
-- What do we need to be true?
-- What constraints do we have?
-- What would success look like?
-
-## Decision Drivers (Optional)
-
-- Driver 1:
-- Driver 2:
+* {decision driver 1, e.g., a constraint, requirement, or force}
+* {decision driver 2}
+* …
 
 ## Considered Options
 
-- Option 1:
-- Option 2:
-- Option 3:
+* {title of option 1}
+* {title of option 2}
+* {title of option 3}
+* …
 
 ## Decision Outcome
 
-Chosen option: "{CHOSEN_OPTION}"
+Chosen option: "{title of option 1}", because {justification — reference drivers and tradeoffs}.
 
-Justification:
+### Consequences
 
-- Why this option meets the drivers better than the alternatives
-- What tradeoffs we're accepting
+* Good, because {positive consequence}
+* Bad, because {negative consequence}
+* Neutral, because {consequence that is neither positive nor negative}
+* …
 
-### Positive Consequences (Optional)
+<!-- Optional — remove if not needed -->
+### Confirmation
 
-- Consequence:
+{How will you verify this decision was implemented correctly? Examples: code review criteria, automated tests, architectural fitness functions, observability checks. Be specific enough that an agent could write the verification.}
 
-### Negative Consequences (Optional)
+<!-- Optional — remove if not needed -->
+## Pros and Cons of the Options
 
-- Consequence:
+### {title of option 1}
 
-## Pros and Cons of the Options (Optional)
+{Brief description or link to more information}
 
-### Option 1
+* Good, because {argument a}
+* Good, because {argument b}
+* Neutral, because {argument c}
+* Bad, because {argument d}
+* …
 
-- Good, because:
-- Bad, because:
+### {title of option 2}
 
-### Option 2
+{Brief description or link to more information}
 
-- Good, because:
-- Bad, because:
+* Good, because {argument a}
+* Good, because {argument b}
+* Neutral, because {argument c}
+* Bad, because {argument d}
+* …
 
-### Option 3
+<!-- Optional — remove if not needed -->
+## More Information
 
-- Good, because:
-- Bad, because:
-
-## Links (Optional)
-
-- Related ADRs:
-- Related PRs/issues:
-- Related docs:
-
+{Additional context, links to related ADRs, team agreements, implementation notes, or conditions that would trigger revisiting this decision. This section is a catch-all for anything that helps future readers (human or agent) understand the full picture.}

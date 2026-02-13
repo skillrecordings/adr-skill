@@ -7,7 +7,7 @@ description: Create and maintain Architecture Decision Records (ADRs) optimized 
 
 ## Philosophy
 
-ADRs created with this skill are **agent-first**: they are written so that a coding agent can read one and implement the decision without further clarification. Humans review and approve, but the primary consumer is an agent working from the ADR.
+ADRs created with this skill are **executable specifications for coding agents**. A human approves the decision; an agent implements it. The ADR must contain everything the agent needs to write correct code without asking follow-up questions.
 
 This means:
 - Constraints must be explicit and measurable, not vibes
@@ -15,6 +15,7 @@ This means:
 - Consequences must map to concrete follow-up tasks
 - Non-goals must be stated to prevent scope creep
 - The ADR must be self-contained — no tribal knowledge assumptions
+- **The ADR must include an implementation plan** — which files to touch, which patterns to follow, which tests to write, and how to verify the decision was implemented correctly
 
 ## When to Write an ADR
 
@@ -32,6 +33,18 @@ Do NOT write an ADR for:
 
 When in doubt: if a future agent working in this codebase would benefit from knowing *why* this choice was made, write the ADR.
 
+### Proactive ADR Triggers (For Agents)
+
+If you are an agent coding in a repo and you encounter any of these situations, **stop and propose an ADR** before continuing:
+
+- You are about to introduce a new dependency that doesn't already exist in the project
+- You are about to create a new architectural pattern (new way of handling errors, new data access layer, new API convention) that other code will need to follow
+- You are about to make a choice between two or more real alternatives and the tradeoffs are non-obvious
+- You are about to change something that contradicts an existing accepted ADR
+- You realize you're writing a long code comment explaining "why" — that reasoning belongs in an ADR
+
+**How to propose**: Tell the human what decision you've hit, why it matters, and ask if they want to capture it as an ADR. If yes, run the full four-phase workflow. If no, note the decision in a code comment and move on.
+
 ## Creating an ADR: Four-Phase Workflow
 
 Every ADR goes through four phases. Do not skip phases.
@@ -47,9 +60,11 @@ Before asking any questions, gather context from the repo:
 
 2. **Check the tech stack.** Read `package.json`, `go.mod`, `requirements.txt`, `Cargo.toml`, or equivalent. Note relevant dependencies and versions.
 
-3. **Find related code patterns.** If the decision involves a specific area (e.g., "how we handle auth"), scan for existing implementations. The ADR should reference what exists today, not assume a blank slate.
+3. **Find related code patterns.** If the decision involves a specific area (e.g., "how we handle auth"), scan for existing implementations. Identify the specific files, directories, and patterns that will be affected by the decision.
 
-4. **Note what you found.** Carry this context into Phase 1 — it will sharpen your questions and prevent the ADR from contradicting existing decisions.
+4. **Check for ADR references in code.** Look for `ADR-NNNN` references in comments and docs (see "Code ↔ ADR Linking" below). This reveals which existing decisions govern which parts of the codebase.
+
+5. **Note what you found.** Carry this context into Phase 1 — it will sharpen your questions and prevent the ADR from contradicting existing decisions.
 
 ### Phase 1: Capture Intent (Socratic)
 
@@ -64,7 +79,7 @@ Interview the human to understand the decision space. Ask questions **one at a t
 5. **What options have you considered?** — At least two. For each: what's the core tradeoff? If they only have one option, help them articulate why alternatives were rejected.
 6. **What's your current lean?** — Capture gut intuition early. Often reveals unstated priorities.
 7. **Who needs to know or approve?** — Decision-makers, consulted experts, informed stakeholders.
-8. **What would you tell an agent implementing this?** — This surfaces the practical context that often gets left out. What files to touch, what patterns to follow, what to avoid.
+8. **What would an agent need to implement this?** — Which files/directories are affected? What existing patterns should it follow? What should it avoid? What tests would prove it's working? This directly feeds the Implementation Plan.
 
 **Adaptive follow-ups**: Based on answers, probe deeper where the decision is fuzzy. Common follow-ups:
 - "What's the worst-case outcome if this decision is wrong?"
@@ -73,7 +88,7 @@ Interview the human to understand the decision space. Ask questions **one at a t
 - "What prior art or existing patterns in the codebase does this relate to?"
 - "I found [existing ADR/pattern] — does this new decision interact with it?"
 
-**When to stop**: You have enough when you can mentally draft every section of the ADR without making things up. If you're guessing at any section, ask another question.
+**When to stop**: You have enough when you can fill every section of the ADR — including the Implementation Plan — without making things up. If you're guessing at any section, ask another question.
 
 **Intent Summary Gate**: Before moving to Phase 2, present a structured summary of what you captured and ask the human to confirm or correct it:
 
@@ -86,6 +101,8 @@ Interview the human to understand the decision space. Ask questions **one at a t
 > - **Lean**: {which option and why}
 > - **Non-goals**: {what's explicitly out of scope}
 > - **Related ADRs/code**: {what exists that this interacts with}
+> - **Affected files/areas**: {where in the codebase this lands}
+> - **Verification**: {how we'll know it's implemented correctly}
 >
 > **Does this capture your intent? Anything to add or correct?**
 
@@ -108,9 +125,11 @@ Do NOT proceed to Phase 2 until the human confirms the summary.
 
 4. **Fill every section from the confirmed intent summary.** Do not leave placeholder text. Every section should contain real content or be removed (optional sections only).
 
-5. **Reference existing code and ADRs.** Link to specific files, functions, or prior ADRs discovered in Phase 0. The ADR should situate the decision in the codebase, not float in the abstract.
+5. **Write the Implementation Plan.** This is the most important section for agent-first ADRs. It tells the next agent exactly what to do. See the template for structure.
 
-6. **Generate the file.**
+6. **Write Verification criteria as checkboxes.** These must be specific enough that an agent can programmatically or manually check each one.
+
+7. **Generate the file.**
    - Preferred: run `scripts/new_adr.js` (handles directory, naming, and optional index updates).
    - If you can't run scripts, copy a template from `assets/templates/` and fill it manually.
 
@@ -122,10 +141,10 @@ After drafting, review the ADR against the agent-readiness checklist in `referen
 
 > **ADR Review**
 >
-> ✅ **Passes**: {list what's solid — e.g., "context is self-contained, constraints are measurable, consequences include follow-up tasks"}
+> ✅ **Passes**: {list what's solid — e.g., "context is self-contained, implementation plan covers affected files, verification criteria are checkable"}
 >
 > ⚠️ **Gaps found**:
-> - {specific gap 1 — e.g., "Non-goals not stated — could an agent accidentally scope-creep into X?"}
+> - {specific gap 1 — e.g., "Implementation Plan doesn't mention test files — which test suite should cover this?"}
 > - {specific gap 2}
 >
 > **Recommendation**: {Ship it / Fix the gaps first / Needs more Phase 1 work}
@@ -146,6 +165,7 @@ Agents should read existing ADRs **before implementing changes** in a codebase t
 - When you encounter a pattern in the code and wonder "why is it done this way?"
 - Before proposing a change that might contradict an existing decision
 - When a human says "check the ADRs" or "there's a decision about this"
+- When you find an `ADR-NNNN` reference in a code comment
 
 ### How to Consult ADRs
 
@@ -153,11 +173,45 @@ Agents should read existing ADRs **before implementing changes** in a codebase t
 
 2. **Scan titles and statuses.** Read the index or list filenames. Focus on `accepted` ADRs — these are active decisions.
 
-3. **Read relevant ADRs fully.** Don't just read the title — read context, decision, consequences, and non-goals. The constraints and non-goals are especially important for implementation.
+3. **Read relevant ADRs fully.** Don't just read the title — read context, decision, consequences, non-goals, AND the Implementation Plan. The Implementation Plan tells you what patterns to follow and what files are governed by this decision.
 
 4. **Respect the decisions.** If an accepted ADR says "use PostgreSQL," don't propose switching to MongoDB without creating a new ADR that supersedes it. If you find a conflict between what the code does and what the ADR says, flag it to the human.
 
-5. **Reference ADRs in your work.** When implementing a feature guided by an ADR, mention which ADR you're following. This creates a paper trail.
+5. **Follow the Implementation Plan.** When implementing code in an area governed by an ADR, follow the patterns specified in its Implementation Plan. If the plan says "all new queries go through the data-access layer in `src/db/`," do that.
+
+6. **Reference ADRs in your work.** Add `ADR-NNNN` references in code comments and PR descriptions (see "Code ↔ ADR Linking" below).
+
+## Code ↔ ADR Linking
+
+ADRs should be bidirectionally linked to the code they govern.
+
+### ADR → Code (in the Implementation Plan)
+
+The Implementation Plan section names specific files, directories, and patterns:
+
+```markdown
+## Implementation Plan
+- **Affected paths**: `src/db/`, `src/config/database.ts`, `tests/integration/`
+- **Pattern**: all database queries go through `src/db/client.ts`
+```
+
+### Code → ADR (in comments)
+
+When implementing code guided by an ADR, add a comment referencing it:
+
+```typescript
+// ADR-0004: Using better-sqlite3 for test database
+// See: docs/decisions/0004-use-sqlite-for-test-database.md
+import Database from 'better-sqlite3';
+```
+
+Keep these lightweight — one comment at the entry point, not on every line. The goal is discoverability: when a future agent reads this code, they can find the reasoning.
+
+### Why This Matters
+
+- An agent working in `src/db/` can find which ADRs govern that area
+- An agent reading an ADR can find the code that implements it
+- When an ADR is superseded, the code references make it easy to find everything that needs updating
 
 ## Other Operations
 
@@ -175,10 +229,11 @@ Agents should read existing ADRs **before implementing changes** in a codebase t
 
 After an ADR is accepted:
 
-1. **Create implementation tasks.** Each consequence and follow-up identified in the ADR should become a trackable task (issue, ticket, or TODO).
-2. **Reference the ADR in PRs.** When implementing the decision, link to the ADR in PR descriptions so the reasoning is discoverable.
-3. **Update status after implementation.** If the Confirmation section defined verification criteria, check them. Note in `## More Information` when implementation was completed.
-4. **Revisit when triggers fire.** If the ADR specified revisit conditions ("if X happens, reconsider"), monitor for those conditions.
+1. **Create implementation tasks.** Each item in the Implementation Plan and each follow-up in Consequences should become a trackable task (issue, ticket, or TODO).
+2. **Reference the ADR in PRs.** Link to the ADR in PR descriptions: "Implements ADR-0004."
+3. **Add code references.** Add `ADR-NNNN` comments at key implementation points.
+4. **Check verification criteria.** Once implementation is complete, walk through the Verification checkboxes. Update the ADR with results in `## More Information`.
+5. **Revisit when triggers fire.** If the ADR specified revisit conditions ("if X happens, reconsider"), monitor for those conditions.
 
 ### Index
 
@@ -225,7 +280,7 @@ Numbers are local to each category. Choose a categorization scheme early (by lay
 - `references/review-checklist.md` — agent-readiness checklist for Phase 3 review.
 - `references/adr-conventions.md` — directory, filename, status, and lifecycle conventions.
 - `references/template-variants.md` — when to use simple vs MADR-style templates.
-- `references/examples.md` — filled-out short and long ADR examples.
+- `references/examples.md` — filled-out short and long ADR examples with implementation plans.
 
 ### assets/
 - `assets/templates/adr-simple.md` — lean template for straightforward decisions.

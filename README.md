@@ -1,6 +1,6 @@
 # ADR Skill
 
-Architecture Decision Records for agentic coding workflows. ADRs are written so a coding agent can read one and implement the decision without further clarification. Humans review and approve.
+Architecture Decision Records as executable specifications for coding agents. An agent reads the ADR and implements the decision. A human reviews and approves.
 
 ## Install
 
@@ -10,17 +10,18 @@ npx skills add skillrecordings/adr-skill
 
 ## What It Does
 
-Uses a three-phase workflow to produce high-quality, agent-readable ADRs:
+Uses a four-phase workflow to produce ADRs that agents can implement from directly:
 
-1. **Capture Intent** — Socratic questioning to understand the decision space before writing anything. Asks targeted questions one at a time to surface constraints, tradeoffs, and unstated assumptions.
-2. **Draft the ADR** — Generates a structured ADR from captured intent using MADR 4.0-aligned templates.
-3. **Review** — Validates the draft against an agent-readiness checklist. Could an agent implement this from the ADR alone? Are consequences actionable? Is scope bounded?
+0. **Scan the Codebase** — Read existing ADRs, check the tech stack, find related code patterns. Context before questions.
+1. **Capture Intent** — Socratic questioning to understand the decision space. One question at a time. Ends with an intent summary the human confirms before anything gets written.
+2. **Draft the ADR** — Generate a structured ADR including an implementation plan (affected files, patterns to follow/avoid, dependencies, verification criteria).
+3. **Review** — Validate against an agent-readiness checklist. Could an agent implement this from the ADR alone? Are verification criteria testable? Is the implementation plan specific?
 
 ## What's Inside
 
 ```
 skills/adr-skill/
-├── SKILL.md                          # Main skill definition (three-phase workflow)
+├── SKILL.md                          # Main skill definition (four-phase workflow)
 ├── assets/templates/
 │   ├── adr-simple.md                 # Lean template for straightforward decisions
 │   ├── adr-madr.md                   # MADR 4.0 template with options/drivers/pros/cons
@@ -38,14 +39,16 @@ skills/adr-skill/
 
 ## Key Design Choices
 
-- **Agent-first**: Constraints must be explicit and measurable. Decisions must be specific enough to act on. Consequences must map to concrete tasks. No tribal knowledge assumptions.
-- **Socratic before writing**: The skill interviews the human before drafting. This captures intent and surfaces the "why" that typically gets lost.
-- **MADR 4.0 aligned**: Templates use YAML front matter for metadata (status, date, decision-makers, consulted, informed), include a Confirmation section, and support Good/Bad/Neutral arguments.
-- **Two template tiers**: Simple (context → decision → consequences) for straightforward choices. MADR (drivers → options → outcome → pros/cons) for complex tradeoffs.
+- **ADRs as executable specs**: Every ADR includes an Implementation Plan (affected files, dependencies, patterns, config changes) and Verification criteria (checkboxes an agent can validate). The ADR is the work order.
+- **Socratic before writing**: The skill interviews the human before drafting. An intent summary gate ensures the human confirms what's being captured before any file is generated.
+- **Codebase-aware**: Phase 0 scans existing ADRs, tech stack, and related code. The ADR references specific files and patterns, not abstractions.
+- **Bidirectional code linking**: ADRs name the files they govern. Code comments reference ADRs back (`// ADR-0004`). Navigable both directions.
+- **Proactive triggers**: Agents are instructed to recognize when they're making an ADR-worthy decision mid-coding and propose capturing it.
+- **MADR 4.0 aligned**: YAML front matter, RACI fields, Good/Bad/Neutral arguments, extended with agent-first sections.
 
 ## Sources / Prior Art
 
-- [MADR](https://adr.github.io/madr/) — Markdown Architectural Decision Records (template structure, YAML front matter, RACI fields, Confirmation section)
+- [MADR](https://adr.github.io/madr/) — Markdown Architectural Decision Records (template structure, YAML front matter, RACI fields)
 - [macromania/adr-agent](https://github.com/macromania/adr-agent) — Socratic questioning approach for ADR creation
 - Michael Nygard, ["Documenting architecture decisions"](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) — Status/Context/Decision/Consequences structure
 - Joel Parker Henderson, [`architecture-decision-record`](https://github.com/joelparkerhenderson/architecture-decision-record) — ADR overview, naming conventions, template collection

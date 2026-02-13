@@ -20,6 +20,18 @@ decision-makers: "{list everyone who owns the decision}"
 * Bad, because {negative consequence}
 * …
 
+## Implementation Plan
+
+* **Affected paths**: {files and directories that change}
+* **Dependencies**: {packages to add/remove/update}
+* **Patterns to follow**: {existing code patterns to match}
+* **Patterns to avoid**: {what NOT to do}
+
+### Verification
+
+- [ ] {how to confirm the decision was implemented correctly}
+- [ ] {another verification criterion}
+
 <!-- Optional — remove if not needed -->
 ## Alternatives Considered
 

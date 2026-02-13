@@ -9,11 +9,11 @@ File: `assets/templates/adr-simple.md`
 Use this when:
 
 - The decision is straightforward (one clear winner, minimal tradeoffs)
-- You mainly need "why, what, consequences"
+- You mainly need "why, what, consequences, how to implement"
 - Alternatives are few and can be dismissed in a sentence each
 - Speed matters more than exhaustive comparison
 
-Sections: Context and Problem Statement → Decision → Consequences → Alternatives Considered (optional) → More Information (optional).
+Sections: Context and Problem Statement → Decision → Consequences → Implementation Plan → Verification → Alternatives Considered (optional) → More Information (optional).
 
 ## MADR (Options-Heavy)
 
@@ -26,15 +26,17 @@ Use this when:
 - The decision is likely to be revisited and the comparison needs to survive
 - Stakeholders need to see the reasoning process, not just the outcome
 
-Sections: Context and Problem Statement → Decision Drivers (optional) → Considered Options → Decision Outcome → Consequences → Confirmation (optional) → Pros and Cons of the Options (optional) → More Information (optional).
+Sections: Context and Problem Statement → Decision Drivers (optional) → Considered Options → Decision Outcome → Consequences → Implementation Plan → Verification → Pros and Cons of the Options (optional) → More Information (optional).
 
-This template aligns with [MADR 4.0](https://adr.github.io/madr/).
+This template aligns with [MADR 4.0](https://adr.github.io/madr/) and extends it with agent-first sections.
 
 ## Both Templates Share
 
 - **YAML front matter** for metadata (status, date, decision-makers, consulted, informed)
+- **Implementation Plan** — affected paths, dependencies, patterns to follow/avoid, configuration, migration steps. This is what makes the ADR an executable spec for agents.
+- **Verification as checkboxes** — testable criteria an agent can validate after implementation
 - **Agent-first framing**: placeholder text prompts you to be specific, measurable, and self-contained
-- **"More Information" section** for cross-links, follow-ups, and revisit triggers (replaces the older "Links" section)
+- **"More Information" section** for cross-links, follow-ups, and revisit triggers
 - **"Neutral, because..."** as a third argument category alongside Good and Bad
 
 ## Choosing Between Them

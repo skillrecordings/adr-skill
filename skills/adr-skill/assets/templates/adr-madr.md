@@ -37,10 +37,25 @@ Chosen option: "{title of option 1}", because {justification — reference drive
 * Neutral, because {consequence that is neither positive nor negative}
 * …
 
-<!-- Optional — remove if not needed -->
-### Confirmation
+## Implementation Plan
 
-{How will you verify this decision was implemented correctly? Examples: code review criteria, automated tests, architectural fitness functions, observability checks. Be specific enough that an agent could write the verification.}
+{This section tells an agent exactly what to do to implement this decision. Be specific — an agent should be able to start coding from this without asking follow-up questions.}
+
+* **Affected paths**: {list files and directories that need to change, e.g., `src/db/`, `src/config/database.ts`, `tests/integration/`}
+* **Dependencies**: {packages to add/remove/update, e.g., "add `better-sqlite3@11.x`, remove `pg-mem`"}
+* **Patterns to follow**: {reference existing code patterns, e.g., "follow the repository pattern in `src/db/repositories/`"}
+* **Patterns to avoid**: {what NOT to do, e.g., "do not use raw SQL outside the data-access layer"}
+* **Configuration**: {env vars, config files, feature flags to add/change}
+* **Migration steps**: {if replacing something, what's the migration path? Can it be done incrementally?}
+
+### Verification
+
+{Checkboxes an agent can validate after implementation. Each must be specific and testable.}
+
+- [ ] {verification criterion 1, e.g., "`npm test` passes with SQLite as the test database"}
+- [ ] {verification criterion 2, e.g., "no direct `pg` imports outside `src/db/client.ts`"}
+- [ ] {verification criterion 3, e.g., "CI pipeline completes in under 60 seconds"}
+- …
 
 <!-- Optional — remove if not needed -->
 ## Pros and Cons of the Options

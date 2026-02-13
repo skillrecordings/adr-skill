@@ -31,6 +31,21 @@ Non-goals: we are NOT migrating production to SQLite or building a full ORM abst
 * Bad, because we must maintain compatibility between SQLite and PostgreSQL SQL dialects
 * Bad, because some PostgreSQL-specific features (JSONB operators, array columns) can't be tested locally
 
+## Implementation Plan
+
+* **Affected paths**: `src/db/client.ts` (new abstraction layer), `src/db/sqlite-client.ts` (new), `src/db/pg-client.ts` (refactored from current inline usage), `tests/setup.ts`, `package.json`
+* **Dependencies**: add `better-sqlite3@11.x` and `@types/better-sqlite3@7.x` as devDependencies; no production dependency changes
+* **Patterns to follow**: existing repository pattern in `src/db/repositories/` — all queries go through repository methods, never raw SQL in business logic
+* **Patterns to avoid**: do not import `better-sqlite3` or `pg` directly outside `src/db/`; do not use PostgreSQL-specific SQL (JSONB operators, `ANY()`, array literals) in shared queries
+
+### Verification
+
+- [ ] `npm test` passes with `DB_ENGINE=sqlite` (default for test env)
+- [ ] `npm test` passes with `DB_ENGINE=postgres` against a real PostgreSQL instance
+- [ ] No imports of `better-sqlite3` or `pg` outside `src/db/`
+- [ ] CI pipeline total time under 90 seconds (was 5+ minutes)
+- [ ] `src/db/client.ts` exports a unified interface used by all repositories
+
 ## Alternatives Considered
 
 * Docker PostgreSQL per CI run: Reliable parity, but adds 90s+ startup and requires Docker-in-Docker on CI.
@@ -38,7 +53,8 @@ Non-goals: we are NOT migrating production to SQLite or building a full ORM abst
 
 ## More Information
 
-Follow-up: create the data-access abstraction layer (#347). Add a weekly CI job that runs the full suite against real PostgreSQL to catch dialect drift.
+* Follow-up: create weekly CI job running full suite against real PostgreSQL (#348)
+* Revisit trigger: if dialect-drift bugs exceed 2 per quarter, reconsider Docker PostgreSQL approach
 ```
 
 ## Long Version (MADR Template)
@@ -63,6 +79,8 @@ Our integration tests require a database but currently hit a shared PostgreSQL i
 2. Slow CI — each run spends 3+ minutes provisioning and seeding the database
 
 How can we provide a fast, isolated database for local development and CI without sacrificing confidence in production compatibility?
+
+Related: [ADR-0003 Use PostgreSQL for production](0003-use-postgresql-for-production.md) — this decision must not compromise production database choice.
 
 ## Decision Drivers
 
@@ -91,11 +109,45 @@ Chosen option: "SQLite via better-sqlite3", because it eliminates the CI bottlen
 * Bad, because PostgreSQL-specific features (JSONB operators, array columns, advisory locks) cannot be tested locally
 * Neutral, because the abstraction layer adds ~200 lines of code but also makes future DB migrations easier
 
-### Confirmation
+## Implementation Plan
 
-* CI pipeline includes a step measuring DB setup time — alert if it exceeds 10 seconds
-* Weekly scheduled CI job runs the full test suite against a real PostgreSQL instance
-* Code review for any new query must confirm it works on both SQLite and PostgreSQL (or is flagged as PostgreSQL-only with a skip annotation)
+* **Affected paths**:
+  - `src/db/client.ts` — new: unified database interface (DatabaseClient type + factory function)
+  - `src/db/sqlite-client.ts` — new: SQLite implementation of DatabaseClient
+  - `src/db/pg-client.ts` — refactor: extract current inline pg usage into DatabaseClient implementation
+  - `src/db/repositories/*.ts` — update: use DatabaseClient instead of direct pg calls
+  - `tests/setup.ts` — update: initialize SQLite by default, read `DB_ENGINE` env var
+  - `tests/fixtures/seed.sql` — update: ensure all seed SQL is dialect-neutral
+  - `.env.test` — new: `DB_ENGINE=sqlite`
+  - `.github/workflows/ci.yml` — update: remove PostgreSQL service container from main CI
+  - `package.json` — add devDependencies
+* **Dependencies**: add `better-sqlite3@11.x`, `@types/better-sqlite3@7.x` as devDependencies
+* **Patterns to follow**:
+  - Repository pattern in `src/db/repositories/` — all database access goes through repository methods
+  - Use parameterized queries exclusively (no string interpolation)
+  - Reference implementation: `src/db/repositories/users.ts` for the expected style
+* **Patterns to avoid**:
+  - Do NOT import `better-sqlite3` or `pg` directly outside `src/db/`
+  - Do NOT use PostgreSQL-specific SQL in shared queries: no `JSONB` operators (`->`, `->>`), no `ANY(ARRAY[...])`, no `ON CONFLICT ... DO UPDATE`
+  - Do NOT use SQLite-specific SQL either — keep queries portable
+* **Configuration**: `DB_ENGINE` env var (`sqlite` | `postgres`), defaults to `sqlite` in test, `postgres` in production
+* **Migration steps**:
+  1. Create `DatabaseClient` interface and SQLite implementation
+  2. Refactor existing pg code into pg implementation
+  3. Update repositories one at a time (each can be a separate PR)
+  4. Update test setup last, once all repositories use the abstraction
+  5. Remove PostgreSQL service container from CI workflow
+
+### Verification
+
+- [ ] `DB_ENGINE=sqlite npm test` passes (all integration tests)
+- [ ] `DB_ENGINE=postgres npm test` passes against a real PostgreSQL 16 instance
+- [ ] `grep -r "from 'better-sqlite3'" src/ --include='*.ts' | grep -v 'src/db/'` returns no results
+- [ ] `grep -r "from 'pg'" src/ --include='*.ts' | grep -v 'src/db/'` returns no results
+- [ ] CI pipeline completes in under 90 seconds (measured on main branch)
+- [ ] `src/db/client.ts` exports `DatabaseClient` interface and `createClient()` factory
+- [ ] `.env.test` sets `DB_ENGINE=sqlite`
+- [ ] Weekly PostgreSQL compatibility CI job exists in `.github/workflows/`
 
 ## Pros and Cons of the Options
 
@@ -136,4 +188,5 @@ Spin up a fresh PostgreSQL container for each CI job.
 * Follow-up task: set up weekly PostgreSQL CI job — #348
 * Related: [ADR-0003 Use PostgreSQL for production](0003-use-postgresql-for-production.md)
 * Revisit trigger: if dialect-drift bugs exceed 2 per quarter, reconsider Docker PostgreSQL approach
+* Code references: after implementation, key files will have `// ADR-0004` comments at entry points
 ````
